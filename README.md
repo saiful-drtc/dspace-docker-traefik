@@ -23,6 +23,7 @@ make start
 
 ## Check it
 With `https://api.example.com/server/` can check the backend.
+
 With `https://ui.example.com/` can check the frontend.
 
 ## Create admin account:
