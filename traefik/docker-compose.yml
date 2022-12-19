@@ -1,0 +1,47 @@
+version: "3.5"
+
+networks:
+  proxy:
+    external: true
+
+x-common: &common
+  logging:
+    driver: "json-file"
+    options:
+      max-size: 32m
+      max-file: "3"
+  restart: unless-stopped
+
+services:
+  traefik:
+    <<: *common
+    image: traefik:${TRAEFIK_VERSION}
+    container_name: traefik
+    command:
+      - --api=true
+      - --log.level=INFO
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=${PROXY_NETWORK}
+      - --entrypoints.${HTTP_ENTRYPOINT}.address=:80
+      - --entrypoints.${HTTPS_ENTRYPOINT}.address=:443
+      - --certificatesresolvers.${CERTRESOLVER}.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.${CERTRESOLVER}.acme.storage=/certs/acme.json
+      - --certificatesresolvers.${CERTRESOLVER}.acme.tlschallenge=true
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/certs
+    labels:
+      # Dashboard
+      - traefik.enable=true
+      - traefik.http.routers.dashboard.rule=Host(${HOSTNAME})
+      - traefik.http.routers.dashboard.service=api@internal
+      - traefik.http.routers.dashboard.tls.certresolver=${CERTRESOLVER}
+      - traefik.http.routers.dashboard.entrypoints=${HTTPS_ENTRYPOINT}
+
+    networks:
+      - ${PROXY_NETWORK}
+

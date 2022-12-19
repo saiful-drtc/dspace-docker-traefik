@@ -1,0 +1,38 @@
+---
+version: '3.7'
+
+networks:
+  proxy:
+    external: true
+
+services:
+  dspace-angular:
+    image: dspace/dspace-angular:${DSPACE_VERSION}
+    container_name: dspace-angular
+    volumes:
+      #- ./mount/app/config/config.production.yaml:/app/config/config.production.yaml
+      - ./mount/app/scripts/serve.ts:/app/scripts/serve.ts
+    environment:
+      DSPACE_UI_SSL: 'false'
+      DSPACE_UI_HOST: ${HOSTNAME_UI}
+      DSPACE_UI_PORT: '4000'
+      DSPACE_UI_NAMESPACE: /
+      DSPACE_REST_SSL: 'true'
+      DSPACE_REST_HOST: ${HOSTNAME_API}
+      DSPACE_REST_PORT: '443'
+      DSPACE_REST_NAMESPACE: /server
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${PROXY_NETWORK}
+
+      - traefik.http.routers.${CLIENTNAME}-${SITENAME}-http-ui.entrypoints=${HTTP_ENTRYPOINT}
+      - traefik.http.routers.${CLIENTNAME}-${SITENAME}-http-ui.rule=Host(`${HOSTNAME_UI}`)
+      - traefik.http.routers.${CLIENTNAME}-${SITENAME}-https-ui.entrypoints=${HTTPS_ENTRYPOINT}
+      - traefik.http.routers.${CLIENTNAME}-${SITENAME}-https-ui.rule=Host(`${HOSTNAME_UI}`)
+      - traefik.http.routers.${CLIENTNAME}-${SITENAME}-https-ui.tls=true
+      - traefik.http.routers.${CLIENTNAME}-${SITENAME}-https-ui.tls.certresolver=${CERTRESOLVER}
+
+      - traefik.http.services.${CLIENTNAME}-${SITENAME}-https-ui.loadbalancer.server.port=4000
+
+    networks:
+      - ${PROXY_NETWORK}
