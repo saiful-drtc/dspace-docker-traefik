@@ -1,17 +1,19 @@
 ### to create new user RUN: docker-compose run --rm dspace-cli create-administrator -e test@test.edu -f admin -l user -p admin -c en
 ---
-version: "3.7"
+version: "3.8"
 
 services:
   dspace-cli:
     image: "dspace/dspace-cli:${DSPACE_VERSION}"
     container_name: dspace-cli
     environment:
-      dspace__P__dir: /dspace
-      db__P__url: 'jdbc:postgresql://dspacedb:5432/dspace'
-      solr__P__server: http://dspacesolr:8983/solr
+      - dspace__P__dir=/dspace
+      - db__P__url=jdbc:postgresql://dspacedb:5432/dspace
+      - solr__P__server=http://dspacesolr:8983/solr
     volumes:
-      - ${DATA_FOLDER}/assetstore:/dspace/assetstore
+      - type: bind
+        source: ${DATA_FOLDER}/assetstore
+        target: /dspace/assetstore
     entrypoint: /dspace/bin/dspace
     command: help
     networks:
@@ -22,4 +24,5 @@ services:
 networks:
   dspacenet:
     external: true
+    name: dspacenet
 

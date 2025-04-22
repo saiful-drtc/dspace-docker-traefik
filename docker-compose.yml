@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  dspace:
+    image: "${DOCKER_REGISTRY:-dspace}/dspace:${DSPACE_VERSION:-latest}"
+    container_name: dspace
+    depends_on:
+      - dspacedb
+      - dspacesolr
+    environment:
+      - DSPACE_HOSTNAME=${DSPACE_HOSTNAME:-localhost}
+      - DSPACE_PORT=${DSPACE_PORT:-8080}
+      - DSPACE_BASEURL=${DSPACE_BASEURL:-http://localhost:8080}
+    volumes:
+      - type: bind
+        source: "${DATA_FOLDER}/assetstore"
+        target: /dspace/assetstore
+    networks:
+      - dspacenet
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dspace.rule=Host(`${DSPACE_HOSTNAME}`)"
+      - "traefik.http.services.dspace.loadbalancer.server.port=8080"
+
+  dspacedb:
+    image: postgres:13-alpine
+    container_name: dspacedb
+    environment:
+      - POSTGRES_DB=dspace
+      - POSTGRES_USER=${POSTGRES_USER:-dspace}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-dspace}
+    volumes:
+      - type: volume
+        source: pgdata
+        target: /var/lib/postgresql/data
+    networks:
+      - dspacenet
+
+  dspacesolr:
+    image: "${DOCKER_REGISTRY:-dspace}/dspace-solr:${DSPACE_VERSION:-latest}"
+    container_name: dspacesolr
+    volumes:
+      - type: volume
+        source: solr_data
+        target: /var/solr/data
+    networks:
+      - dspacenet
+
+  traefik:
+    image: traefik:v2.9
+    container_name: traefik
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    networks:
+      - dspacenet
+
+networks:
+  dspacenet:
+    name: dspacenet
+
+volumes:
+  pgdata:
+  solr_data:

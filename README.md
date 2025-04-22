@@ -1,30 +1,51 @@
-# DSpace 7 in docker with traefik proxy
-## Configure
-Create from each env.sample file an .env file and set all variable to a valid hostname
+# DSpace with Traefik
 
-## Start DSpace
-#### Create required networks:
+This repository contains Docker Compose configurations for running DSpace with Traefik as the reverse proxy.
+
+## Project Structure
+
+- `docker-compose.yml` - Root configuration that sets up:
+  - DSpace main application
+  - PostgreSQL database
+  - Solr search
+  - Traefik reverse proxy
+- `api/docker-compose.yml` - DSpace REST API service
+- `ui/docker-compose.yml` - DSpace Angular UI
+- `traefik/docker-compose.yml` - Traefik detailed configuration
+
+## Quick Start
+
+1. Create your `.env` file:
+```bash
+cp .env.example .env
 ```
-docker network create proxy
-docker network create dspacenet
+
+2. Start the base services:
+```bash
+docker-compose up -d
 ```
 
-#### Start the containers:
-```
-cd traefik
-./start.sh
-
-cd api
-./start.sh
-
-cd ui
-./start.sh
+3. Start the UI (optional):
+```bash
+docker-compose -f ui/docker-compose.yml up -d
 ```
 
-## Check it
-With `https://api.example.com/server/` can check the backend.
+4. Start the REST API (optional):
+```bash
+docker-compose -f api/docker-compose.yml up -d
+```
 
-With `https://ui.example.com/` can check the frontend.
+## Configuration
+
+- The root `docker-compose.yml` provides the core DSpace services
+- Use `docker-compose.override.yml` for local customizations
+- Environment variables are configured in `.env`
+
+## Access Services
+
+- DSpace UI: http://localhost
+- REST API: http://localhost/server
+- Traefik Dashboard: http://localhost:8080
 
 ## Create admin account:
 ```

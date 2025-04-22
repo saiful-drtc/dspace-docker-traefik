@@ -1,47 +1,40 @@
-version: "3.5"
-
-networks:
-  proxy:
-    external: true
-
-x-common: &common
-  logging:
-    driver: "json-file"
-    options:
-      max-size: 32m
-      max-file: "3"
-  restart: unless-stopped
+version: "3.8"
 
 services:
   traefik:
-    <<: *common
-    image: traefik:${TRAEFIK_VERSION}
+    image: traefik:v2.9
     container_name: traefik
     command:
-      - --api=true
-      - --log.level=INFO
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --providers.docker.network=${PROXY_NETWORK}
-      - --entrypoints.${HTTP_ENTRYPOINT}.address=:80
-      - --entrypoints.${HTTPS_ENTRYPOINT}.address=:443
-      - --certificatesresolvers.${CERTRESOLVER}.acme.email=${ACME_EMAIL}
-      - --certificatesresolvers.${CERTRESOLVER}.acme.storage=/certs/acme.json
-      - --certificatesresolvers.${CERTRESOLVER}.acme.tlschallenge=true
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
     ports:
       - "80:80"
       - "443:443"
+      - "8080:8080"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./certs:/certs
-    labels:
-      # Dashboard
-      - traefik.enable=true
-      - traefik.http.routers.dashboard.rule=Host(${HOSTNAME})
-      - traefik.http.routers.dashboard.service=api@internal
-      - traefik.http.routers.dashboard.tls.certresolver=${CERTRESOLVER}
-      - traefik.http.routers.dashboard.entrypoints=${HTTPS_ENTRYPOINT}
-
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+      - type: bind
+        source: ./config
+        target: /etc/traefik
+      - type: bind
+        source: ./letsencrypt
+        target: /letsencrypt
     networks:
-      - ${PROXY_NETWORK}
+      - dspacenet
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DOMAIN:-localhost}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.middlewares=auth"
+      - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_AUTH:-admin:$$apr1$$1UAy4ZrL$$rAQbIo8DVR8oHvaeD.GPn/}"
+
+networks:
+  dspacenet:
+    external: true
+    name: dspacenet
 
