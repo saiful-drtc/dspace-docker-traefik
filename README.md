@@ -12,13 +12,13 @@ docker network create dspacenet
 #### Start the containers:
 ```
 cd traefik
-make start
+./start.sh
 
 cd api
-make start
+./start.sh
 
 cd ui
-make start
+./start.sh
 ```
 
 ## Check it
