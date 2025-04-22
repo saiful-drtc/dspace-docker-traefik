@@ -1,7 +1,4 @@
 ### to create new user RUN: docker-compose run --rm dspace-cli create-administrator -e test@test.edu -f admin -l user -p admin -c en
----
-version: "3.8"
-
 services:
   dspace-cli:
     image: "dspace/dspace-cli:${DSPACE_VERSION}"

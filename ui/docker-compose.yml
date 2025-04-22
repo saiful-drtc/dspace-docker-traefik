@@ -1,6 +1,3 @@
----
-version: "3.8"
-
 services:
   dspace-angular:
     image: "${DOCKER_REGISTRY:-dspace}/dspace-angular:${DSPACE_VERSION:-latest}"

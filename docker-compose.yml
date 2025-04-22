@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   dspace:
     image: "${DOCKER_REGISTRY:-dspace}/dspace:${DSPACE_VERSION:-latest}"
